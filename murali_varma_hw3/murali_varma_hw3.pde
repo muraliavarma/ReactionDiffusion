@@ -5,12 +5,16 @@ int CELL_HEIGHT = 8;
 int CELL_WIDTH = 8;
 int CONTROLS_WIDTH = 200;
 
+float RU = 0.082;
+float RV = 0.041;
+
 int U_MODE = 0;
 int V_MODE = 1;
 
 //variables
 float[][] u;
 float[][] v;
+int[][] neighbors = {{-1, -1}, {-1, 1}, {1, -1}, {1, 1}};
 
 int mode = U_MODE;
 
@@ -18,6 +22,7 @@ float minColor = 10000;
 float maxColor = 0;
 
 void setup() {
+	frameRate(1);
 	size(NUM_HORIZONTAL_CELLS * CELL_WIDTH + CONTROLS_WIDTH, NUM_VERTICAL_CELLS * CELL_HEIGHT);
 	background(0);
 	noStroke();
@@ -50,6 +55,7 @@ void initCells() {
 }
 
 void draw() {
+	doDiffusion();
 	setColorRange();
 	drawCells();
 }
@@ -93,4 +99,33 @@ void drawCells() {
 void drawCell(int i, int j, float col) {
 	fill(255 * col);
 	rect (CELL_WIDTH * j, CELL_HEIGHT * i, CELL_WIDTH, CELL_HEIGHT);
+}
+
+void doDiffusion() {
+	float[][] u2 = new float[NUM_VERTICAL_CELLS][NUM_HORIZONTAL_CELLS];
+	float[][] v2 = new float[NUM_VERTICAL_CELLS][NUM_HORIZONTAL_CELLS];
+
+	for (int i = 0; i < NUM_VERTICAL_CELLS; i++) {
+		for (int j = 0; j < NUM_HORIZONTAL_CELLS; j++) {
+			float sumU = 0;
+			float sumV = 0;
+			for (int k = 0; k < neighbors.length; k++) {
+				int y = (i + neighbors[k][1] + NUM_VERTICAL_CELLS) % NUM_VERTICAL_CELLS;
+				int x = (j + neighbors[k][0] + NUM_HORIZONTAL_CELLS) % NUM_HORIZONTAL_CELLS;
+				sumU += u[y][x];
+				sumV += v[y][x];
+			}
+			u2[i][j] = RU * (sumU - 4 * u[i][j]);
+			v2[i][j] = RV * (sumV - 4 * v[i][j]);
+			if (i == 20 && j == 20)
+			println(i + ", " + j + ", " + u2[i][j]);
+		}
+	}
+	//copy new array values into original array
+	for (int i = 0; i < NUM_VERTICAL_CELLS; i++) {
+		for (int j = 0; j < NUM_HORIZONTAL_CELLS; j++) {
+			u[i][j] = u2[i][j];
+			v[i][j] = v2[i][j];
+		}
+	}
 }
