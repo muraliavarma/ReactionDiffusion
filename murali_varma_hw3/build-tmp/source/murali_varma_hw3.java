@@ -19,28 +19,37 @@ int NUM_VERTICAL_CELLS = 120;
 int CELL_HEIGHT = 5;
 int CELL_WIDTH = 5;
 int CONTROLS_WIDTH = 200;
+int FRAMES_TO_SKIP = 5;
 
 float RU = 0.082f;
 float RV = 0.041f;
 
 int U_MODE = 0;
 int V_MODE = 1;
+
+int RD_MODE = 0;	//reaction and diffusion
+int D_MODE = 1;		//diffusion alone
+
 float f = 0.035f;
 float k = 0.0625f;
-float dt = 3;
+float dt = 1;
+
+int frames = 0;
+boolean paused = false;
 
 //variables
 float[][] u;
 float[][] v;
 int[][] neighbors = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
 
-int mode = U_MODE;
+int uvMode = U_MODE;
+int rdMode = RD_MODE;
 
 float minColor;
 float maxColor;
 
 public void setup() {
-	// frameRate(100);
+	// frameRate(8000);
 	size(NUM_HORIZONTAL_CELLS * CELL_WIDTH + CONTROLS_WIDTH, NUM_VERTICAL_CELLS * CELL_HEIGHT);
 	background(0);
 	noStroke();
@@ -73,22 +82,22 @@ public void initCells() {
 }
 
 public void draw() {
-	// println("Before: " + u[19][20] + ", " + u[21][20] + ", " + u[20][19] + ", " + u[20][21] + " ::: " + u[20][20]);
+	frames ++;
 	doDiffusion();
-	// println("After Diffusion: " + u[19][20] + ", " + u[21][20] + ", " + u[20][19] + ", " + u[20][21] + " ::: " + u[20][20]);
-	doReaction();
-	// println("After Reaction: " + u[19][20] + ", " + u[21][20] + ", " + u[20][19] + ", " + u[20][21] + " ::: " + u[20][20]);
-	setColorRange();
-	// minColor = 0;
-	// maxColor = 1;
-	drawCells();
-	// println(minColor+ ", " + maxColor);
+	if (rdMode == RD_MODE) {
+		doReaction();
+	}
+	if (frames % FRAMES_TO_SKIP == 0) {
+		frames = 0;
+		setColorRange();
+		drawCells();
+	}
 }
 
 public void setColorRange() {
 	minColor = 10000;
 	maxColor = 0;
-	if (mode == U_MODE) {
+	if (uvMode == U_MODE) {
 		for (int i = 0; i < NUM_VERTICAL_CELLS; i++) {
 			for (int j = 0; j < NUM_HORIZONTAL_CELLS; j++) {
 				minColor = min(minColor, u[i][j]);
@@ -113,7 +122,7 @@ public void drawCells() {
 			if (range == 0) {
 				drawCell(i, j, 0.5f);
 			}
-			else if (mode == U_MODE){
+			else if (uvMode == U_MODE){
 				drawCell(i, j, (u[i][j] - minColor) / range);
 			}
 			else{
@@ -162,6 +171,55 @@ public void doReaction() {
 			u[i][j] += dt * (-1 * uvv + f * (1 - u[i][j]));
 			v[i][j] += dt * (uvv - v[i][j] * (f + k));
 		}
+	}
+}
+
+public void keyPressed() {
+	if (key == 'i' || key == 'I') {
+		initCells();
+	}
+
+	if (key == 'u' || key == 'U') {
+		uvMode = U_MODE;
+	}
+	else if (key == 'v' || key == 'V') {
+		uvMode = V_MODE;
+	}
+
+	if (key == 'd' || key == 'D') {
+		if (rdMode == RD_MODE) {
+			rdMode = D_MODE;
+		}
+		else {
+			rdMode = RD_MODE;
+		}
+	}
+
+	if (key == ' ') {
+		if (paused) {
+			loop();
+		}
+		else {
+			noLoop();
+		}
+		paused = !paused;
+	}
+
+	else if (key == '1') {
+		f = 0.035f;
+		k = 0.0625f;
+	}
+	else if (key == '2') {
+		f = 0.035f;
+		k = 0.06f;
+	}
+	else if (key == '3') {
+		f = 0.0118f;
+		k = 0.0475f;
+	}
+	else if (key == '4') {
+		f = 0.054f;
+		k = 0.063f;
 	}
 }
   static public void main(String[] passedArgs) {
