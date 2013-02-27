@@ -14,10 +14,10 @@ import java.io.IOException;
 public class murali_varma_hw3 extends PApplet {
 
 //constants
-int NUM_HORIZONTAL_CELLS = 100;
-int NUM_VERTICAL_CELLS = 100;
-int CELL_HEIGHT = 8;
-int CELL_WIDTH = 8;
+int NUM_HORIZONTAL_CELLS = 120;
+int NUM_VERTICAL_CELLS = 120;
+int CELL_HEIGHT = 5;
+int CELL_WIDTH = 5;
 int CONTROLS_WIDTH = 200;
 
 float RU = 0.082f;
@@ -27,7 +27,7 @@ int U_MODE = 0;
 int V_MODE = 1;
 float f = 0.035f;
 float k = 0.0625f;
-float dt = 1;
+float dt = 3;
 
 //variables
 float[][] u;
@@ -75,9 +75,12 @@ public void initCells() {
 public void draw() {
 	// println("Before: " + u[19][20] + ", " + u[21][20] + ", " + u[20][19] + ", " + u[20][21] + " ::: " + u[20][20]);
 	doDiffusion();
+	// println("After Diffusion: " + u[19][20] + ", " + u[21][20] + ", " + u[20][19] + ", " + u[20][21] + " ::: " + u[20][20]);
 	doReaction();
-	// println("After: " + u[19][20] + ", " + u[21][20] + ", " + u[20][19] + ", " + u[20][21] + " ::: " + u[20][20]);
+	// println("After Reaction: " + u[19][20] + ", " + u[21][20] + ", " + u[20][19] + ", " + u[20][21] + " ::: " + u[20][20]);
 	setColorRange();
+	// minColor = 0;
+	// maxColor = 1;
 	drawCells();
 	// println(minColor+ ", " + maxColor);
 }
@@ -155,8 +158,9 @@ public void doDiffusion() {
 public void doReaction() {
 	for (int i = 0; i < NUM_VERTICAL_CELLS; i++) {
 		for (int j = 0; j < NUM_HORIZONTAL_CELLS; j++) {
-			u[i][j] += dt * (-u[i][j] * v[i][j] * v[i][j] + f * (1 - u[i][j]));
-			v[i][j] += dt * (u[i][j] * v[i][j] * v[i][j] - v[i][j] * (f + k));
+			float uvv = u[i][j] * v[i][j] * v[i][j];
+			u[i][j] += dt * (-1 * uvv + f * (1 - u[i][j]));
+			v[i][j] += dt * (uvv - v[i][j] * (f + k));
 		}
 	}
 }
