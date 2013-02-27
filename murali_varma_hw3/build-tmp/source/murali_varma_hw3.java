@@ -27,17 +27,17 @@ int U_MODE = 0;
 int V_MODE = 1;
 float f = 0.035f;
 float k = 0.0625f;
-float t = 1;
+float dt = 1;
 
 //variables
 float[][] u;
 float[][] v;
-int[][] neighbors = {{-1, -1}, {-1, 1}, {1, -1}, {1, 1}};
+int[][] neighbors = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
 
 int mode = U_MODE;
 
-float minColor = 10000;
-float maxColor = 0;
+float minColor;
+float maxColor;
 
 public void setup() {
 	// frameRate(100);
@@ -73,14 +73,18 @@ public void initCells() {
 }
 
 public void draw() {
+	// println("Before: " + u[19][20] + ", " + u[21][20] + ", " + u[20][19] + ", " + u[20][21] + " ::: " + u[20][20]);
 	doDiffusion();
 	doReaction();
-	println(u[20][20] + ", " + v[20][20]);
+	// println("After: " + u[19][20] + ", " + u[21][20] + ", " + u[20][19] + ", " + u[20][21] + " ::: " + u[20][20]);
 	setColorRange();
 	drawCells();
+	// println(minColor+ ", " + maxColor);
 }
 
 public void setColorRange() {
+	minColor = 10000;
+	maxColor = 0;
 	if (mode == U_MODE) {
 		for (int i = 0; i < NUM_VERTICAL_CELLS; i++) {
 			for (int j = 0; j < NUM_HORIZONTAL_CELLS; j++) {
@@ -135,8 +139,8 @@ public void doDiffusion() {
 				sumU += u[y][x];
 				sumV += v[y][x];
 			}
-			u2[i][j] = u[i][j] + t * RU * (sumU - 4 * u[i][j]);
-			v2[i][j] = v[i][j] + t * RV * (sumV - 4 * v[i][j]);
+			u2[i][j] = u[i][j] + dt * RU * (sumU - 4 * u[i][j]);
+			v2[i][j] = v[i][j] + dt * RV * (sumV - 4 * v[i][j]);
 		}
 	}
 	//copy new array values into original array
@@ -151,8 +155,8 @@ public void doDiffusion() {
 public void doReaction() {
 	for (int i = 0; i < NUM_VERTICAL_CELLS; i++) {
 		for (int j = 0; j < NUM_HORIZONTAL_CELLS; j++) {
-			u[i][j] += t * (-u[i][j] * v[i][j] * v[i][j] + f * (1 - u[i][j]));
-			v[i][j] += t * (u[i][j] * v[i][j] * v[i][j] - v[i][j] * (f + k));
+			u[i][j] += dt * (-u[i][j] * v[i][j] * v[i][j] + f * (1 - u[i][j]));
+			v[i][j] += dt * (u[i][j] * v[i][j] * v[i][j] - v[i][j] * (f + k));
 		}
 	}
 }
