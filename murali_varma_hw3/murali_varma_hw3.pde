@@ -10,6 +10,9 @@ float RV = 0.041;
 
 int U_MODE = 0;
 int V_MODE = 1;
+float f = 0.035;
+float k = 0.0625;
+float t = 1;
 
 //variables
 float[][] u;
@@ -22,7 +25,7 @@ float minColor = 10000;
 float maxColor = 0;
 
 void setup() {
-	frameRate(1);
+	// frameRate(100);
 	size(NUM_HORIZONTAL_CELLS * CELL_WIDTH + CONTROLS_WIDTH, NUM_VERTICAL_CELLS * CELL_HEIGHT);
 	background(0);
 	noStroke();
@@ -47,8 +50,8 @@ void initCells() {
 				v[i][j] = 0.25;
 			}
 			else {
-				u[i][j] = 1;
-				v[i][j] = 0;
+				u[i][j] = 1.0;
+				v[i][j] = 0.0;
 			}
 		}
 	}
@@ -56,6 +59,8 @@ void initCells() {
 
 void draw() {
 	doDiffusion();
+	doReaction();
+	println(u[20][20] + ", " + v[20][20]);
 	setColorRange();
 	drawCells();
 }
@@ -109,16 +114,14 @@ void doDiffusion() {
 		for (int j = 0; j < NUM_HORIZONTAL_CELLS; j++) {
 			float sumU = 0;
 			float sumV = 0;
-			for (int k = 0; k < neighbors.length; k++) {
-				int y = (i + neighbors[k][1] + NUM_VERTICAL_CELLS) % NUM_VERTICAL_CELLS;
-				int x = (j + neighbors[k][0] + NUM_HORIZONTAL_CELLS) % NUM_HORIZONTAL_CELLS;
+			for (int l = 0; l < neighbors.length; l++) {
+				int y = (i + neighbors[l][1] + NUM_VERTICAL_CELLS) % NUM_VERTICAL_CELLS;
+				int x = (j + neighbors[l][0] + NUM_HORIZONTAL_CELLS) % NUM_HORIZONTAL_CELLS;
 				sumU += u[y][x];
 				sumV += v[y][x];
 			}
-			u2[i][j] = RU * (sumU - 4 * u[i][j]);
-			v2[i][j] = RV * (sumV - 4 * v[i][j]);
-			if (i == 20 && j == 20)
-			println(i + ", " + j + ", " + u2[i][j]);
+			u2[i][j] = u[i][j] + t * RU * (sumU - 4 * u[i][j]);
+			v2[i][j] = v[i][j] + t * RV * (sumV - 4 * v[i][j]);
 		}
 	}
 	//copy new array values into original array
@@ -126,6 +129,15 @@ void doDiffusion() {
 		for (int j = 0; j < NUM_HORIZONTAL_CELLS; j++) {
 			u[i][j] = u2[i][j];
 			v[i][j] = v2[i][j];
+		}
+	}
+}
+
+void doReaction() {
+	for (int i = 0; i < NUM_VERTICAL_CELLS; i++) {
+		for (int j = 0; j < NUM_HORIZONTAL_CELLS; j++) {
+			u[i][j] += t * (-u[i][j] * v[i][j] * v[i][j] + f * (1 - u[i][j]));
+			v[i][j] += t * (u[i][j] * v[i][j] * v[i][j] - v[i][j] * (f + k));
 		}
 	}
 }
