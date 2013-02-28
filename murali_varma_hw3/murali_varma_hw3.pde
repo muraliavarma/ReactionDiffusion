@@ -56,7 +56,7 @@ void setup() {
 	buttons[6] = new Button(20, 340, 70, 20, "Spots", "1");
 	buttons[7] = new Button(110, 340, 70, 20, "Stripes", "2");
 	buttons[8] = new Button(20, 380, 70, 20, "Spirals", "3");
-	buttons[9] = new Button(110, 380, 70, 20, "Worms", "4");
+	buttons[9] = new Button(110, 380, 70, 20, "Maze", "4");
 	drawControls();
 }
 
