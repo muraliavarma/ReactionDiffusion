@@ -39,6 +39,7 @@ float dt = 2;
 
 int frames = 0;
 boolean paused = false;
+Button[] buttons;
 
 //variables
 float[][] u;
@@ -57,6 +58,14 @@ public void setup() {
 	size(NUM_HORIZONTAL_CELLS * CELL_WIDTH + CONTROLS_WIDTH, NUM_VERTICAL_CELLS * CELL_HEIGHT);
 	background(0);
 	noStroke();
+
+	//GUI Stuff
+	buttons = new Button[4];
+	buttons[0] = new Button(20, 60, 120, 20, "Initialize", "I");
+	buttons[1] = new Button(20, 100, 120, 20, "Show U Values", "U");
+	buttons[2] = new Button(20, 140, 120, 20, "Show V Values", "V");
+	buttons[3] = new Button(20, 180, 120, 20, "Play/Pause", "Space");
+	drawControls();
 }
 
 public void initCells() {
@@ -83,20 +92,22 @@ public void initCells() {
 }
 
 public void draw() {
-	frames ++;
-	doDiffusion();
-	if (rdMode == RD_MODE) {
-		if (pMode == CONSTANT_MODE) {
-			doReaction();
+	if (!paused) {
+		frames ++;
+		doDiffusion();
+		if (rdMode == RD_MODE) {
+			if (pMode == CONSTANT_MODE) {
+				doReaction();
+			}
+			else {
+				doVaryingReaction();
+			}
 		}
-		else {
-			doVaryingReaction();
+		if (frames % FRAMES_TO_SKIP == 0) {
+			frames = 0;
+			setColorRange();
+			drawCells();
 		}
-	}
-	if (frames % FRAMES_TO_SKIP == 0) {
-		frames = 0;
-		setColorRange();
-		drawCells();
 	}
 }
 
@@ -225,13 +236,8 @@ public void keyPressed() {
 	}
 
 	if (key == ' ') {
-		if (paused) {
-			loop();
-		}
-		else {
-			noLoop();
-		}
 		paused = !paused;
+		drawControls();
 	}
 
 	if (key == '1') {
@@ -275,10 +281,10 @@ public void mousePressed() {
 	int yCell = mouseY/CELL_HEIGHT;
 
 	if (xCell >= NUM_HORIZONTAL_CELLS) {
-		//find which control the click happened on
-		// for (int i = 0; i < buttons.length; i++) {
-		// 	buttons[i].click();
-		// }
+		// find which control the click happened on
+		for (int i = 0; i < buttons.length; i++) {
+			buttons[i].click();
+		}
 		return;
 	}
 
@@ -286,6 +292,84 @@ public void mousePressed() {
 		(pMode == VARYING_PARAMETER_MODE ? ", k = " + (0.03f + ((0.04f * xCell) / NUM_HORIZONTAL_CELLS)) +
 		", f = " + (0.08f * (1.0f - (1.0f * yCell / NUM_VERTICAL_CELLS))) : ""));
 }
+
+public void mouseMoved() {
+	if (mouseX/CELL_WIDTH >= NUM_HORIZONTAL_CELLS) {
+		//find which control the mouse is hovered on
+		for (int i = 0; i < buttons.length; i++) {
+			buttons[i].hover();
+		}
+	}
+}
+
+//GUI Stuff
+public void drawControls() {
+	fill(0);
+	rect(NUM_HORIZONTAL_CELLS * CELL_WIDTH, 0, CONTROLS_WIDTH, NUM_VERTICAL_CELLS * CELL_HEIGHT);
+	fill(255);
+	text("Simulation is " + (paused ? "paused" : "playing"), NUM_HORIZONTAL_CELLS * CELL_WIDTH + 20, 30);
+	text("Click above buttons for various actions", NUM_HORIZONTAL_CELLS * CELL_WIDTH + 20, 460, CONTROLS_WIDTH - 40, 100);
+	text("Developed by Murali Varma", NUM_HORIZONTAL_CELLS * CELL_WIDTH + 20, NUM_VERTICAL_CELLS * CELL_HEIGHT - 60, CONTROLS_WIDTH - 20, 20);
+	text("github.com/muraliavarma/ ReactionDiffusion", NUM_HORIZONTAL_CELLS * CELL_WIDTH + 20, NUM_VERTICAL_CELLS * CELL_HEIGHT - 40, CONTROLS_WIDTH - 20, 40);
+	for (int i = 0; i < buttons.length; i++) {
+		buttons[i].draw(200);
+	}
+	line(NUM_HORIZONTAL_CELLS * CELL_WIDTH, 250, NUM_HORIZONTAL_CELLS * CELL_WIDTH + CONTROLS_WIDTH, 250);
+	line(NUM_HORIZONTAL_CELLS * CELL_WIDTH, 450, NUM_HORIZONTAL_CELLS * CELL_WIDTH + CONTROLS_WIDTH, 450);
+}
+
+//Button class that is used plenty of times in the GUI controls
+class Button {
+	int x;
+	int y;
+	int width;
+	int height;
+	String buttonText;
+	String hotkey = "";
+
+	//constructor for buttons with hotkeys
+	Button(int x, int y, int width, int height, String buttonText, String hotkey) {
+		this.x = NUM_HORIZONTAL_CELLS * CELL_WIDTH + x;
+		this.y = y;
+		this.width = width;
+		this.height = height;
+		this.buttonText = buttonText;
+		this.hotkey = hotkey;
+	}
+
+	//what happens when you click the button
+	public void click() {
+		if (mouseX > x && mouseX < x + width && mouseY > y && mouseY < y + height) {
+			println(hotkey);
+		}
+	}
+
+	//change color upon hovering on button
+	public void hover() {
+		if (mouseX > x && mouseX < x + width && mouseY > y && mouseY < y + height) {
+			draw(100);
+		}
+		else {
+			draw(200);
+		}
+	}
+
+	//draw the actual button
+	public void draw(int col) {
+		fill(col);
+		rect(x, y, width, height);
+		fill(0);
+		text(buttonText + hotkeyify(), x + 2, y + 4, width, height);
+	}
+
+	//stringifies the hotkey that needs to be displayed inside the button
+	public String hotkeyify() {
+		if (hotkey == "") {
+			return "";
+		}
+		return " (" + hotkey + ")";
+	}
+};
   static public void main(String[] passedArgs) {
     String[] appletArgs = new String[] { "murali_varma_hw3" };
     if (passedArgs != null) {
