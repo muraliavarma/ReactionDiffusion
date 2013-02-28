@@ -3,7 +3,7 @@ int NUM_HORIZONTAL_CELLS = 120;
 int NUM_VERTICAL_CELLS = 120;
 int CELL_HEIGHT = 5;
 int CELL_WIDTH = 5;
-int CONTROLS_WIDTH = 200;
+int CONTROLS_WIDTH = 250;
 int FRAMES_TO_SKIP = 5;
 
 float RU = 0.082;
@@ -18,6 +18,7 @@ int D_MODE = 1;	//diffusion alone
 int CONSTANT_MODE = 0;
 int VARYING_PARAMETER_MODE = 1;
 
+//variables
 float f = 0.035;
 float k = 0.0625;
 float dt = 2;
@@ -26,7 +27,6 @@ int frames = 0;
 boolean paused = false;
 Button[] buttons;
 
-//variables
 float[][] u;
 float[][] v;
 int[][] neighbors = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
@@ -37,6 +37,7 @@ int pMode = CONSTANT_MODE;
 
 float minColor;
 float maxColor;
+String cellDetails = "";
 
 void setup() {
 	setDefaultParams();
@@ -45,11 +46,17 @@ void setup() {
 	noStroke();
 
 	//GUI Stuff
-	buttons = new Button[4];
+	buttons = new Button[10];
 	buttons[0] = new Button(20, 60, 120, 20, "Initialize", "I");
 	buttons[1] = new Button(20, 100, 120, 20, "Show U Values", "U");
 	buttons[2] = new Button(20, 140, 120, 20, "Show V Values", "V");
 	buttons[3] = new Button(20, 180, 120, 20, "Play/Pause", "Space");
+	buttons[4] = new Button(20, 220, 220, 20, "Toggle Reaction/Diffusion", "D");
+	buttons[5] = new Button(20, 260, 220, 20, "Toggle Const/Varying Params", "P");
+	buttons[6] = new Button(20, 340, 70, 20, "Spots", "1");
+	buttons[7] = new Button(110, 340, 70, 20, "Stripes", "2");
+	buttons[8] = new Button(20, 380, 70, 20, "Spirals", "3");
+	buttons[9] = new Button(110, 380, 70, 20, "Worms", "4");
 	drawControls();
 }
 
@@ -200,24 +207,11 @@ void keyPressed() {
 	}
 
 	if (key == 'd' || key == 'D') {
-		if (rdMode == RD_MODE) {
-			rdMode = D_MODE;
-		}
-		else {
-			rdMode = RD_MODE;
-		}
+		swapMode("rd");
 	}
 
 	if (key == 'p' || key == 'P') {
-		if (pMode == CONSTANT_MODE) {
-			rdMode = RD_MODE;
-			pMode = VARYING_PARAMETER_MODE;
-			setVaryingParams();
-		}
-		else {
-			setDefaultParams();
-			pMode = CONSTANT_MODE;
-		}
+		swapMode("p");
 	}
 
 	if (key == ' ') {
@@ -273,9 +267,11 @@ void mousePressed() {
 		return;
 	}
 
-	println("Cell[" + yCell + "][" + xCell + "]: u = " + u[yCell][xCell] + ", v = " + v[yCell][xCell] +
-		(pMode == VARYING_PARAMETER_MODE ? ", k = " + (0.03 + ((0.04 * xCell) / NUM_HORIZONTAL_CELLS)) +
-		", f = " + (0.08 * (1.0 - (1.0 * yCell / NUM_VERTICAL_CELLS))) : ""));
+	cellDetails = "Cell[" + yCell + "][" + xCell + "]: u = " + String.format("%.3f", u[yCell][xCell]) + ", v = " + String.format("%.3f", v[yCell][xCell]) +
+		(pMode == VARYING_PARAMETER_MODE ? ", k = " + String.format("%.3f", (0.03 + ((0.04 * xCell) / NUM_HORIZONTAL_CELLS))) +
+		", f = " + String.format("%.3f", (0.08 * (1.0 - (1.0 * yCell / NUM_VERTICAL_CELLS)))) : "");
+	println(cellDetails);
+	drawControls();
 }
 
 void mouseMoved() {
@@ -287,20 +283,48 @@ void mouseMoved() {
 	}
 }
 
+void swapMode(String type) {
+	if (type == "rd") {
+		if (rdMode == RD_MODE) {
+			rdMode = D_MODE;
+		}
+		else {
+			rdMode = RD_MODE;
+		}
+	}
+
+	if (type == "p") {
+		if (pMode == CONSTANT_MODE) {
+			rdMode = RD_MODE;
+			pMode = VARYING_PARAMETER_MODE;
+			setVaryingParams();
+		}
+		else {
+			setDefaultParams();
+			pMode = CONSTANT_MODE;
+		}
+	}
+}
+
 //GUI Stuff
 void drawControls() {
+	stroke(100);
 	fill(0);
 	rect(NUM_HORIZONTAL_CELLS * CELL_WIDTH, 0, CONTROLS_WIDTH, NUM_VERTICAL_CELLS * CELL_HEIGHT);
 	fill(255);
 	text("Simulation is " + (paused ? "paused" : "playing"), NUM_HORIZONTAL_CELLS * CELL_WIDTH + 20, 30);
-	text("Click above buttons for various actions", NUM_HORIZONTAL_CELLS * CELL_WIDTH + 20, 460, CONTROLS_WIDTH - 40, 100);
+	text("Simulate Pattern:", NUM_HORIZONTAL_CELLS * CELL_WIDTH + 20, 310, CONTROLS_WIDTH - 40, 100);
+	text(cellDetails, NUM_HORIZONTAL_CELLS * CELL_WIDTH + 20, 430, CONTROLS_WIDTH - 40, 100);
+	text("Click above buttons for various actions", NUM_HORIZONTAL_CELLS * CELL_WIDTH + 20, 480, CONTROLS_WIDTH - 40, 100);
 	text("Developed by Murali Varma", NUM_HORIZONTAL_CELLS * CELL_WIDTH + 20, NUM_VERTICAL_CELLS * CELL_HEIGHT - 60, CONTROLS_WIDTH - 20, 20);
 	text("github.com/muraliavarma/ ReactionDiffusion", NUM_HORIZONTAL_CELLS * CELL_WIDTH + 20, NUM_VERTICAL_CELLS * CELL_HEIGHT - 40, CONTROLS_WIDTH - 20, 40);
 	for (int i = 0; i < buttons.length; i++) {
 		buttons[i].draw(200);
 	}
-	line(NUM_HORIZONTAL_CELLS * CELL_WIDTH, 250, NUM_HORIZONTAL_CELLS * CELL_WIDTH + CONTROLS_WIDTH, 250);
-	line(NUM_HORIZONTAL_CELLS * CELL_WIDTH, 450, NUM_HORIZONTAL_CELLS * CELL_WIDTH + CONTROLS_WIDTH, 450);
+	line(NUM_HORIZONTAL_CELLS * CELL_WIDTH, 290, NUM_HORIZONTAL_CELLS * CELL_WIDTH + CONTROLS_WIDTH, 290);
+	line(NUM_HORIZONTAL_CELLS * CELL_WIDTH, 420, NUM_HORIZONTAL_CELLS * CELL_WIDTH + CONTROLS_WIDTH, 420);
+	line(NUM_HORIZONTAL_CELLS * CELL_WIDTH, 470, NUM_HORIZONTAL_CELLS * CELL_WIDTH + CONTROLS_WIDTH, 470);
+	noStroke();
 }
 
 //Button class that is used plenty of times in the GUI controls
@@ -325,7 +349,42 @@ class Button {
 	//what happens when you click the button
 	void click() {
 		if (mouseX > x && mouseX < x + width && mouseY > y && mouseY < y + height) {
-			println(hotkey);
+			if (hotkey == "I") {
+				initCells();
+			}
+			if (hotkey == "Space") {
+				paused = !paused;
+				drawControls();
+			}
+			if (hotkey == "U") {
+				uvMode = U_MODE;
+			}
+			if (hotkey == "V") {
+				uvMode = V_MODE;
+			}
+			if (hotkey == "D") {
+				swapMode("rd");
+			}
+			if (hotkey == "P") {
+				swapMode("p");
+			}
+
+			if (hotkey == "1") {
+				f = 0.035;
+				k = 0.0625;
+			}
+			else if (hotkey == "2") {
+				f = 0.035;
+				k = 0.06;
+			}
+			else if (hotkey == "3") {
+				f = 0.0118;
+				k = 0.0475;
+			}
+			else if (hotkey == "4") {
+				f = 0.054;
+				k = 0.063;
+			}
 		}
 	}
 
@@ -344,14 +403,6 @@ class Button {
 		fill(col);
 		rect(x, y, width, height);
 		fill(0);
-		text(buttonText + hotkeyify(), x + 2, y + 4, width, height);
-	}
-
-	//stringifies the hotkey that needs to be displayed inside the button
-	String hotkeyify() {
-		if (hotkey == "") {
-			return "";
-		}
-		return " (" + hotkey + ")";
+		text(buttonText + " (" + hotkey + ")", x + 2, y + 4, width, height);
 	}
 };
