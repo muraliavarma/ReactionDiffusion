@@ -172,7 +172,6 @@ void doVaryingReaction() {
 			float uvv = u[i][j] * v[i][j] * v[i][j];
 			u[i][j] += dt * (-1 * uvv + currF * (1 - u[i][j]));
 			v[i][j] += dt * (uvv - v[i][j] * (currF + currK));
-			// println("i: " + i + ", j: " + j + ", u: " + u[i][j] + ", v: " + v[i][j] + ", f: " + currF + ", k: " + currK);
 		}
 	}
 }
@@ -254,4 +253,21 @@ void setVaryingParams() {
 	CELL_WIDTH = 2;
 	CELL_HEIGHT = 2;
 	initCells();	
+}
+
+void mousePressed() {
+	int xCell = mouseX/CELL_WIDTH;
+	int yCell = mouseY/CELL_HEIGHT;
+
+	if (xCell >= NUM_HORIZONTAL_CELLS) {
+		//find which control the click happened on
+		// for (int i = 0; i < buttons.length; i++) {
+		// 	buttons[i].click();
+		// }
+		return;
+	}
+
+	println("Cell[" + yCell + "][" + xCell + "]: u = " + u[yCell][xCell] + ", v = " + v[yCell][xCell] +
+		(pMode == VARYING_PARAMETER_MODE ? ", k = " + (0.03 + ((0.04 * xCell) / NUM_HORIZONTAL_CELLS)) +
+		", f = " + (0.08 * (1.0 - (1.0 * yCell / NUM_VERTICAL_CELLS))) : ""));
 }

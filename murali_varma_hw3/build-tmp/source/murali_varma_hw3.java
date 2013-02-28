@@ -187,7 +187,6 @@ public void doVaryingReaction() {
 			float uvv = u[i][j] * v[i][j] * v[i][j];
 			u[i][j] += dt * (-1 * uvv + currF * (1 - u[i][j]));
 			v[i][j] += dt * (uvv - v[i][j] * (currF + currK));
-			// println("i: " + i + ", j: " + j + ", u: " + u[i][j] + ", v: " + v[i][j] + ", f: " + currF + ", k: " + currK);
 		}
 	}
 }
@@ -269,6 +268,23 @@ public void setVaryingParams() {
 	CELL_WIDTH = 2;
 	CELL_HEIGHT = 2;
 	initCells();	
+}
+
+public void mousePressed() {
+	int xCell = mouseX/CELL_WIDTH;
+	int yCell = mouseY/CELL_HEIGHT;
+
+	if (xCell >= NUM_HORIZONTAL_CELLS) {
+		//find which control the click happened on
+		// for (int i = 0; i < buttons.length; i++) {
+		// 	buttons[i].click();
+		// }
+		return;
+	}
+
+	println("Cell[" + yCell + "][" + xCell + "]: u = " + u[yCell][xCell] + ", v = " + v[yCell][xCell] +
+		(pMode == VARYING_PARAMETER_MODE ? ", k = " + (0.03f + ((0.04f * xCell) / NUM_HORIZONTAL_CELLS)) +
+		", f = " + (0.08f * (1.0f - (1.0f * yCell / NUM_VERTICAL_CELLS))) : ""));
 }
   static public void main(String[] passedArgs) {
     String[] appletArgs = new String[] { "murali_varma_hw3" };
