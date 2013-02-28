@@ -15,9 +15,12 @@ int V_MODE = 1;
 int RD_MODE = 0;	//reaction and diffusion
 int D_MODE = 1;	//diffusion alone
 
+int CONSTANT_MODE = 0;
+int VARYING_PARAMETER_MODE = 1;
+
 float f = 0.035;
 float k = 0.0625;
-float dt = 1;
+float dt = 2;
 
 int frames = 0;
 boolean paused = false;
@@ -29,23 +32,22 @@ int[][] neighbors = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
 
 int uvMode = U_MODE;
 int rdMode = RD_MODE;
+int pMode = CONSTANT_MODE;
 
 float minColor;
 float maxColor;
 
 void setup() {
+	setDefaultParams();
 	size(NUM_HORIZONTAL_CELLS * CELL_WIDTH + CONTROLS_WIDTH, NUM_VERTICAL_CELLS * CELL_HEIGHT);
 	background(0);
 	noStroke();
-
-	//initialize variables
-	u = new float[NUM_VERTICAL_CELLS][NUM_HORIZONTAL_CELLS];
-	v = new float[NUM_VERTICAL_CELLS][NUM_HORIZONTAL_CELLS];
-
-	initCells();
 }
 
 void initCells() {
+	u = new float[NUM_VERTICAL_CELLS][NUM_HORIZONTAL_CELLS];
+	v = new float[NUM_VERTICAL_CELLS][NUM_HORIZONTAL_CELLS];
+
 	int horizontalOffset = 20;
 	int verticalOffset = 20;
 	int blockWidth = 10;
@@ -69,7 +71,12 @@ void draw() {
 	frames ++;
 	doDiffusion();
 	if (rdMode == RD_MODE) {
-		doReaction();
+		if (pMode == CONSTANT_MODE) {
+			doReaction();
+		}
+		else {
+			doVaryingReaction();
+		}
 	}
 	if (frames % FRAMES_TO_SKIP == 0) {
 		frames = 0;
@@ -157,6 +164,18 @@ void doReaction() {
 		}
 	}
 }
+void doVaryingReaction() {
+	for (int i = 0; i < NUM_VERTICAL_CELLS; i++) {
+		float currF = 0.08 * (1.0 - (1.0 * i / NUM_VERTICAL_CELLS));
+		for (int j = 0; j < NUM_HORIZONTAL_CELLS; j++) {
+			float currK = 0.03 + ((0.04 * j) / NUM_HORIZONTAL_CELLS);
+			float uvv = u[i][j] * v[i][j] * v[i][j];
+			u[i][j] += dt * (-1 * uvv + currF * (1 - u[i][j]));
+			v[i][j] += dt * (uvv - v[i][j] * (currF + currK));
+			// println("i: " + i + ", j: " + j + ", u: " + u[i][j] + ", v: " + v[i][j] + ", f: " + currF + ", k: " + currK);
+		}
+	}
+}
 
 void keyPressed() {
 	if (key == 'i' || key == 'I') {
@@ -179,6 +198,18 @@ void keyPressed() {
 		}
 	}
 
+	if (key == 'p' || key == 'P') {
+		if (pMode == CONSTANT_MODE) {
+			rdMode = RD_MODE;
+			pMode = VARYING_PARAMETER_MODE;
+			setVaryingParams();
+		}
+		else {
+			setDefaultParams();
+			pMode = CONSTANT_MODE;
+		}
+	}
+
 	if (key == ' ') {
 		if (paused) {
 			loop();
@@ -189,7 +220,7 @@ void keyPressed() {
 		paused = !paused;
 	}
 
-	else if (key == '1') {
+	if (key == '1') {
 		f = 0.035;
 		k = 0.0625;
 	}
@@ -205,4 +236,22 @@ void keyPressed() {
 		f = 0.054;
 		k = 0.063;
 	}
+}
+
+void setDefaultParams() {
+	NUM_HORIZONTAL_CELLS = 120;
+	NUM_VERTICAL_CELLS = 120;
+	CELL_WIDTH = 5;
+	CELL_HEIGHT = 5;
+	f = 0.035;
+	k = 0.0625;
+	initCells();
+}
+
+void setVaryingParams() {
+	NUM_HORIZONTAL_CELLS = 300;
+	NUM_VERTICAL_CELLS = 300;
+	CELL_WIDTH = 2;
+	CELL_HEIGHT = 2;
+	initCells();	
 }

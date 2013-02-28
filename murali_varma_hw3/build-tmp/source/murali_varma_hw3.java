@@ -28,11 +28,14 @@ int U_MODE = 0;
 int V_MODE = 1;
 
 int RD_MODE = 0;	//reaction and diffusion
-int D_MODE = 1;		//diffusion alone
+int D_MODE = 1;	//diffusion alone
+
+int CONSTANT_MODE = 0;
+int VARYING_PARAMETER_MODE = 1;
 
 float f = 0.035f;
 float k = 0.0625f;
-float dt = 1;
+float dt = 2;
 
 int frames = 0;
 boolean paused = false;
@@ -44,24 +47,22 @@ int[][] neighbors = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
 
 int uvMode = U_MODE;
 int rdMode = RD_MODE;
+int pMode = CONSTANT_MODE;
 
 float minColor;
 float maxColor;
 
 public void setup() {
-	// frameRate(8000);
+	setDefaultParams();
 	size(NUM_HORIZONTAL_CELLS * CELL_WIDTH + CONTROLS_WIDTH, NUM_VERTICAL_CELLS * CELL_HEIGHT);
 	background(0);
 	noStroke();
-
-	//initialize variables
-	u = new float[NUM_VERTICAL_CELLS][NUM_HORIZONTAL_CELLS];
-	v = new float[NUM_VERTICAL_CELLS][NUM_HORIZONTAL_CELLS];
-
-	initCells();
 }
 
 public void initCells() {
+	u = new float[NUM_VERTICAL_CELLS][NUM_HORIZONTAL_CELLS];
+	v = new float[NUM_VERTICAL_CELLS][NUM_HORIZONTAL_CELLS];
+
 	int horizontalOffset = 20;
 	int verticalOffset = 20;
 	int blockWidth = 10;
@@ -85,7 +86,12 @@ public void draw() {
 	frames ++;
 	doDiffusion();
 	if (rdMode == RD_MODE) {
-		doReaction();
+		if (pMode == CONSTANT_MODE) {
+			doReaction();
+		}
+		else {
+			doVaryingReaction();
+		}
 	}
 	if (frames % FRAMES_TO_SKIP == 0) {
 		frames = 0;
@@ -173,6 +179,18 @@ public void doReaction() {
 		}
 	}
 }
+public void doVaryingReaction() {
+	for (int i = 0; i < NUM_VERTICAL_CELLS; i++) {
+		float currF = 0.08f * (1.0f - (1.0f * i / NUM_VERTICAL_CELLS));
+		for (int j = 0; j < NUM_HORIZONTAL_CELLS; j++) {
+			float currK = 0.03f + ((0.04f * j) / NUM_HORIZONTAL_CELLS);
+			float uvv = u[i][j] * v[i][j] * v[i][j];
+			u[i][j] += dt * (-1 * uvv + currF * (1 - u[i][j]));
+			v[i][j] += dt * (uvv - v[i][j] * (currF + currK));
+			// println("i: " + i + ", j: " + j + ", u: " + u[i][j] + ", v: " + v[i][j] + ", f: " + currF + ", k: " + currK);
+		}
+	}
+}
 
 public void keyPressed() {
 	if (key == 'i' || key == 'I') {
@@ -195,6 +213,18 @@ public void keyPressed() {
 		}
 	}
 
+	if (key == 'p' || key == 'P') {
+		if (pMode == CONSTANT_MODE) {
+			rdMode = RD_MODE;
+			pMode = VARYING_PARAMETER_MODE;
+			setVaryingParams();
+		}
+		else {
+			setDefaultParams();
+			pMode = CONSTANT_MODE;
+		}
+	}
+
 	if (key == ' ') {
 		if (paused) {
 			loop();
@@ -205,7 +235,7 @@ public void keyPressed() {
 		paused = !paused;
 	}
 
-	else if (key == '1') {
+	if (key == '1') {
 		f = 0.035f;
 		k = 0.0625f;
 	}
@@ -221,6 +251,24 @@ public void keyPressed() {
 		f = 0.054f;
 		k = 0.063f;
 	}
+}
+
+public void setDefaultParams() {
+	NUM_HORIZONTAL_CELLS = 120;
+	NUM_VERTICAL_CELLS = 120;
+	CELL_WIDTH = 5;
+	CELL_HEIGHT = 5;
+	f = 0.035f;
+	k = 0.0625f;
+	initCells();
+}
+
+public void setVaryingParams() {
+	NUM_HORIZONTAL_CELLS = 300;
+	NUM_VERTICAL_CELLS = 300;
+	CELL_WIDTH = 2;
+	CELL_HEIGHT = 2;
+	initCells();	
 }
   static public void main(String[] passedArgs) {
     String[] appletArgs = new String[] { "murali_varma_hw3" };
